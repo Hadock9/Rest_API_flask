@@ -1,43 +1,38 @@
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import JSONResponse
-from marshmallow import ValidationError
-
+from fastapi import APIRouter, HTTPException
+from typing import List
 from .models import books
-from .schemas import BookSchema
+from .schemas import Book, BookCreate
 
-router = APIRouter()
-schema = BookSchema()
+router = APIRouter(prefix="/books", tags=["books"])
 
-@router.get("/books")
+@router.get("/", response_model=List[Book])
 async def get_all_books():
-    return JSONResponse(content=books)
+    return books
 
-@router.get("/books/{book_id}")
-async def get_book(book_id: int):
-    for book in books:
-        if book["id"] == book_id:
-            return JSONResponse(content=book)
-    raise HTTPException(status_code=404, detail="Book not found")
+@router.get("/{book_id}", response_model=Book)
+async def get_book(book_id: str):
+    book = next((book for book in books if book["id"] == book_id), None)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return book
 
-@router.post("/books")
-async def add_book(request: Request):
-    data = await request.json()
-    try:
-        validated = schema.load(data)
-    except ValidationError as err:
-        raise HTTPException(status_code=422, detail=err.messages)
+@router.post("/", response_model=Book, status_code=201)
+async def add_book(book: BookCreate):
+    new_id = str(len(books) + 1)
+    new_book = Book(
+        id=new_id,
+        title=book.title,
+        author=book.author,
+        year=book.year
+    )
+    books.append(new_book.model_dump())
+    return new_book
 
-    for book in books:
-        if book["id"] == validated["id"]:
-            raise HTTPException(status_code=400, detail="Book with this ID already exists")
-
-    books.append(validated)
-    return JSONResponse(content=validated, status_code=201)
-
-@router.delete("/books/{book_id}")
-async def delete_book(book_id: int):
-    for book in books:
-        if book["id"] == book_id:
-            books.remove(book)
-            return JSONResponse(content={"message": "Book deleted"})
-    raise HTTPException(status_code=404, detail="Book not found")
+@router.delete("/{book_id}", status_code=204)
+async def delete_book(book_id: str):
+    global books
+    book = next((book for book in books if book["id"] == book_id), None)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    books = [b for b in books if b["id"] != book_id]
+    return None
