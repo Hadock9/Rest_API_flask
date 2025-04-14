@@ -1,7 +1,19 @@
-from marshmallow import Schema, fields, validate, ValidationError
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
 
-class BookSchema(Schema):
-    id = fields.Int(required=True)
-    title = fields.Str(required=True, validate=validate.Length(min=1))
-    author = fields.Str(required=True, validate=validate.Length(min=1))
-    year = fields.Int(required=True)
+class BookBase(BaseModel):
+    title: str
+    author: str
+    year: int
+
+class BookCreate(BookBase):
+    pass
+
+class BookSchema(BookBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
