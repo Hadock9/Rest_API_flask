@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 class BookBase(BaseModel):
     title: str
@@ -17,3 +17,7 @@ class BookSchema(BookBase):
 
     class Config:
         from_attributes = True
+
+class BooksResponse(BaseModel):
+    items: List[BookSchema]
+    next_cursor: Optional[int] = None
