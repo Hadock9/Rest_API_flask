@@ -1,23 +1,14 @@
-from pydantic import BaseModel
-from datetime import datetime
-from typing import Optional, List
+from marshmallow import Schema, fields, validate
 
-class BookBase(BaseModel):
-    title: str
-    author: str
-    year: int
+class BookSchema(Schema):
+    id = fields.Int(dump_only=True)
+    title = fields.Str(required=True, validate=validate.Length(min=1))
+    author = fields.Str(required=True, validate=validate.Length(min=1))
+    year = fields.Int(required=True)
+    created_at = fields.DateTime(dump_only=True)
+    updated_at = fields.DateTime(dump_only=True)
 
-class BookCreate(BookBase):
-    pass
-
-class BookSchema(BookBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-class BooksResponse(BaseModel):
-    items: List[BookSchema]
-    next_cursor: Optional[int] = None
+class BookCreateSchema(Schema):
+    title = fields.Str(required=True, validate=validate.Length(min=1))
+    author = fields.Str(required=True, validate=validate.Length(min=1))
+    year = fields.Int(required=True)
