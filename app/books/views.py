@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request, abort
 from marshmallow import Schema, fields, ValidationError
-import uuid
 from . import book_bp
 
 class BookSchema(Schema):
@@ -14,19 +13,19 @@ books_schema = BookSchema(many=True)
 
 books = [
     {
-        "id": 1,
+        "id": "1",
         "title": "1984",
         "author": "George Orwell",
         "year": 1949
     },
     {
-        "id": 2,
+        "id": "2",
         "title": "Brave New World",
         "author": "Aldous Huxley",
         "year": 1932
     },
     {
-        "id": 3,
+        "id": "3",
         "title": "Fahrenheit 451",
         "author": "Ray Bradbury",
         "year": 1953
@@ -37,7 +36,7 @@ books = [
 def get_books():
     return jsonify(books), 200
 
-@book_bp.route('/<int:book_id>', methods=['GET'])
+@book_bp.route('/<string:book_id>', methods=['GET'])
 def get_book(book_id):
     book = next((book for book in books if book["id"] == book_id), None)
     if not book:
@@ -51,7 +50,9 @@ def add_book():
     except ValidationError as err:
         return jsonify(err.messages), 400
 
-    data["id"] = str(uuid.uuid4())  # Generate a unique ID
+    # Generate a new numeric ID
+    new_id = str(len(books) + 1)
+    data["id"] = new_id
     books.append(data)
     return jsonify(data), 201
 
