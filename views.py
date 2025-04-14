@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from typing import List
+from typing import Optional
 from .models import Book, SessionLocal
-from .schemas import BookSchema, BookCreateSchema
+from .schemas import BookSchema, BookCreateSchema, BooksResponse
 
 router = APIRouter()
 
@@ -14,10 +14,27 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/books", response_model=List[BookSchema])
-async def get_all_books(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    books = db.query(Book).offset(skip).limit(limit).all()
-    return books
+@router.get("/books", response_model=BooksResponse)
+async def get_all_books(
+    cursor: Optional[int] = None,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Book)
+    
+    if cursor:
+        query = query.filter(Book.id > cursor)
+    
+    books = query.order_by(Book.id).limit(limit).all()
+    
+    next_cursor = None
+    if books:
+        next_cursor = books[-1].id
+    
+    return BooksResponse(
+        items=books,
+        next_cursor=next_cursor
+    )
 
 @router.get("/books/{book_id}", response_model=BookSchema)
 async def get_book(book_id: int, db: Session = Depends(get_db)):
