@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional, List
+from pydantic_mongo import PydanticObjectId
 
 class BookBase(BaseModel):
     title: str
@@ -11,13 +12,15 @@ class BookCreate(BookBase):
     pass
 
 class BookSchema(BookBase):
-    id: int
+    id: PydanticObjectId
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        from_attributes = True
+        json_encoders = {
+            PydanticObjectId: str
+        }
 
 class BooksResponse(BaseModel):
     items: List[BookSchema]
-    next_cursor: Optional[int] = None
+    next_cursor: Optional[str] = None
