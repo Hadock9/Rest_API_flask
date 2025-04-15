@@ -32,3 +32,29 @@ class Book(Base):
 
 # Створюємо всі таблиці
 Base.metadata.create_all(bind=engine)
+
+class Book:
+    def __init__(self, id, title, author, year):
+        self.id = id
+        self.title = title
+        self.author = author
+        self.year = year
+        self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'author': self.author,
+            'year': self.year,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
+
+# In-memory storage
+books = [
+    Book(1, "1984", "George Orwell", 1949),
+    Book(2, "To Kill a Mockingbird", "Harper Lee", 1960),
+    Book(3, "The Great Gatsby", "F. Scott Fitzgerald", 1925)
+]
