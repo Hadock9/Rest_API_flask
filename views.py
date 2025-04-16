@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List
 from .models import Book, SessionLocal
 from .schemas import BookSchema, BookCreateSchema
+from pydantic import BaseModel
 
-router = APIRouter()
+router = APIRouter(prefix="/books", tags=["books"])
 
 # Залежність для отримання сесії бази даних
 def get_db():
@@ -14,10 +15,36 @@ def get_db():
     finally:
         db.close()
 
-@router.get("/books", response_model=List[BookSchema])
-async def get_all_books(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    books = db.query(Book).offset(skip).limit(limit).all()
-    return books
+class PaginatedResponse(BaseModel):
+    items: List[Book]
+    total: int
+    page: int
+    size: int
+    pages: int
+    has_next: bool
+    has_prev: bool
+
+@router.get("/", response_model=PaginatedResponse)
+async def get_all_books(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(10, ge=1, le=100, description="Items per page")
+):
+    start = (page - 1) * size
+    end = start + size
+    paginated_items = db.query(Book).offset(start).limit(size).all()
+    
+    total = db.query(Book).count()
+    pages = (total + size - 1) // size
+    
+    return PaginatedResponse(
+        items=paginated_items,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages,
+        has_next=page < pages,
+        has_prev=page > 1
+    )
 
 @router.get("/books/{book_id}", response_model=BookSchema)
 async def get_book(book_id: int, db: Session = Depends(get_db)):
