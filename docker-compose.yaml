@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  mock-server:
+    image: stoplight/prism:4
+    ports:
+      - '4010:4010'
+    volumes:
+      - ./api.yaml:/api.yaml
+      - ./examples.yaml:/examples.yaml
+    command: mock -h 0.0.0.0 /api.yaml --examples=/examples.yaml
+    environment:
+      - PRISM_DEBUG=true
+      - PRISM_VERBOSITY=3
