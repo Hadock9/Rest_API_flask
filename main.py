@@ -1,8 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from redis import Redis
+from redis.asyncio import Redis
 from .views import router
-from .rate_limiter import rate_limit_middleware
+from .rate_limiter import rate_limit
 
 app = FastAPI(
     title="Library API",
@@ -25,7 +25,15 @@ redis = Redis(host="localhost", port=6379, db=0)
 # Add rate limiter middleware
 @app.middleware("http")
 async def rate_limiter_middleware(request: Request, call_next):
-    await rate_limit_middleware(request, redis)
+    # Get user_id from request if authenticated
+    user_id = None
+    if hasattr(request, 'user'):
+        user_id = request.user.username
+    
+    # Apply rate limiting
+    await rate_limit(request, user_id, redis)
+    
+    # Process request
     response = await call_next(request)
     return response
 
