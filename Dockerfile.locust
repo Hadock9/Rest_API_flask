@@ -1,0 +1,5 @@
+FROM locustio/locust:2.15.1
+
+COPY locustfile.py /locustfile.py
+
+CMD ["--host=http://mock-server:4010", "--headless", "-u", "100", "-r", "10", "--run-time", "1m"] 

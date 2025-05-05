@@ -12,3 +12,20 @@ services:
     environment:
       - PRISM_DEBUG=true
       - PRISM_VERBOSITY=3
+
+  locust:
+    build:
+      context: .
+      dockerfile: Dockerfile.locust
+    ports:
+      - '8089:8089'
+    depends_on:
+      - mock-server
+    networks:
+      - library-network
+    environment:
+      - TARGET_HOST=http://mock-server:4010
+
+networks:
+  library-network:
+    driver: bridge
