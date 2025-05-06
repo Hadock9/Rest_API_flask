@@ -1,8 +1,13 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from redis.asyncio import Redis
+import os
+from dotenv import load_dotenv
 from .views import router
 from .rate_limiter import rate_limit
+from .redis_config import redis
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI(
     title="Library API",
@@ -18,9 +23,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Initialize Redis
-redis = Redis(host="localhost", port=6379, db=0)
 
 # Add rate limiter middleware
 @app.middleware("http")
